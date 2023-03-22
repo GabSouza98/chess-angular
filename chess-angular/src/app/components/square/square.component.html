@@ -1,0 +1,4 @@
+<div (click)="handleClick($event)" class="flex" [style.background-color]="color">    
+    <img *ngIf="piece != ''" src='{{ "assets/pieces/" + piece + ".svg" }}'/>
+</div>
+

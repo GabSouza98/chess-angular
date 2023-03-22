@@ -1,0 +1,13 @@
+<div class="flex" *ngFor="let row of board; let y=index">
+    <app-square    
+        *ngFor="let tile of row; let x=index"    
+        [piece]="tile"            
+        [row]="y"
+        [col]="x"     
+        [color]="getColor(x, y)"
+        (clickedSquare)="onClickedSquare($event)"
+    ></app-square>
+</div>
+
+
+   
