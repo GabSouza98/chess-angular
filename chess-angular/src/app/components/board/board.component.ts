@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Coordinates } from 'src/app/models/models';
+import { GameEngine } from 'src/app/models/GameEngine';
+import { Coordinates, Board, Square, createSquare } from 'src/app/models/models';
 
 @Component({
   selector: 'app-board',
@@ -8,58 +9,41 @@ import { Coordinates } from 'src/app/models/models';
 })
 export class BoardComponent implements OnInit {
 
-  board: string[][] = [];
+  board: Board = [];
+  gameEngine!: GameEngine;
 
   darkColor = "grey";
   lightColor = "white";
   availableColor = "lime";
 
-  allowedSquares: number[][] = [];
-
   previousCoordinate?: Coordinates | null;
 
   ngOnInit(): void {
-    this.initializeBoard();    
+    this.board = this.initializeBoard();
+    this.gameEngine = new GameEngine(this.board);
+    console.log(this.board);
   }
 
-  initializeBoard() : void {
-    this.board = [
-      ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-      ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-      ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-    ]
-  }
+  
 
-  getColor(x : number, y : number) : string {
+  getColor(x: number, y: number): string {
+    let highlight: boolean = this.board[y][x].highlighted;
 
-    let color = null;
-
-    this.allowedSquares.forEach( pair => {
-      if(pair[0] === y && pair[1] === x) {
-        color = this.availableColor;
-      }
-    })
-
-    if(color) return color;    
+    if (highlight) return this.availableColor;
 
     return (x + y) % 2 === 0 ? this.lightColor : this.darkColor;
   }
 
-  onClickedSquare(coord : Coordinates) : void {
+  onClickedSquare(coord: Coordinates): void {
 
-    if(this.previousCoordinate) {      
+    if (this.previousCoordinate) {
 
-      if(this.isSameCoordinate(coord)) {        
+      if (this.isSameCoordinate(coord)) {
         this.resetSelection();
         return;
       }
 
-      if(this.isSameTeam(coord)) {
+      if (this.isSameTeam(coord)) {
         this.resetSelection();
         this.selectPiece(coord);
         return;
@@ -70,57 +54,97 @@ export class BoardComponent implements OnInit {
 
       return;
     }
-      
-    if(this.hasPiece(coord)) {        
+
+    if (this.hasPiece(coord)) {
       this.selectPiece(coord);
-    }    
-  } 
+      this.gameEngine.getAllowedSquares(coord.row, coord.col);
+    }
+  }
 
-  isSameCoordinate(coord : Coordinates) : boolean {
+  isSameCoordinate(coord: Coordinates): boolean {
     return this.previousCoordinate?.row == coord.row && this.previousCoordinate.col == coord.col;
-  }  
+  }
 
-  isSameTeam(coord: Coordinates) : boolean {
-    let originPiece = this.board[this.previousCoordinate!.row][this.previousCoordinate!.col]; 
+  isSameTeam(coord: Coordinates): boolean {
+    let originPiece = this.board[this.previousCoordinate!.row][this.previousCoordinate!.col].piece;
     let originTeam = originPiece[0];
-    let destinationPiece = this.board[coord.row][coord.col];
-    let destinationTeam = destinationPiece[0];    
+    let destinationPiece = this.board[coord.row][coord.col].piece;
+    let destinationTeam = destinationPiece[0];
     return originTeam === destinationTeam;
   }
 
-  hasPiece(coord: Coordinates) : boolean {
-    let piece = this.board[coord.row][coord.col]; 
+  hasPiece(coord: Coordinates): boolean {
+    let piece = this.board[coord.row][coord.col].piece;
     return piece != "";
   }
 
-  selectPiece(coord : Coordinates) : void {
+  selectPiece(coord: Coordinates): void {
+    //what if previous coordinate is attribute of gameEngine?
     this.previousCoordinate = coord;
-    this.allowedSquares.push([coord.row, coord.col]);
+    this.board[coord.row][coord.col].highlighted = true;    
   }
 
-  makeMove(coord: Coordinates) : void {
-    if(this.previousCoordinate) {
+  makeMove(coord: Coordinates): void {
+    if (this.previousCoordinate) {
 
       // com bug de animacao
-      let piece = this.board[this.previousCoordinate.row][this.previousCoordinate.col];    
-      this.board[this.previousCoordinate.row][this.previousCoordinate.col] = "";    
-      this.board[coord.row][coord.col] = piece; 
+      // let piece = this.board[this.previousCoordinate.row][this.previousCoordinate.col];    
+      // this.board[this.previousCoordinate.row][this.previousCoordinate.col] = "";    
+      // this.board[coord.row][coord.col] = piece; 
 
       //sem bug de animação. O [...spread] não faz deep copy para arrays bidimensionais
       //https://holycoders.com/javscript-copy-array/
-      // let updatedBoard = [];
-      // for (var i = 0; i < this.board.length; i++)
-      //   updatedBoard[i] = this.board[i].slice();   
+      let updatedBoard = [];
+      for (var i = 0; i < this.board.length; i++)
+        updatedBoard[i] = this.board[i].slice();
 
-      // let piece = updatedBoard[this.previousCoordinate.row][this.previousCoordinate.col];    
-      // updatedBoard[this.previousCoordinate.row][this.previousCoordinate.col] = "";    
-      // updatedBoard[coord.row][coord.col] = piece; 
-      // this.board = updatedBoard;
-    }    
+      let piece = updatedBoard[this.previousCoordinate.row][this.previousCoordinate.col].piece;
+      updatedBoard[this.previousCoordinate.row][this.previousCoordinate.col].piece = "";
+      updatedBoard[coord.row][coord.col].piece = piece;
+      this.board = updatedBoard;
+    }
   }
 
-  resetSelection() : void {
-    this.allowedSquares = [];
+  resetSelection(): void {
+
+    this.board.map((row: Square[]) => {
+      row.map((square: Square) => {
+        square.highlighted = false;
+      })
+    });
+
+    //what if previous coordinate is attribute of gameEngine?
     this.previousCoordinate = null;
   }
+
+
+  initializeBoard(): Board {
+    return [
+      ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"].map((piece, col) =>
+        createSquare(piece, col, 0, false, `${String.fromCharCode(97 + col)}8`)
+      ),
+      ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"].map((piece, col) =>
+        createSquare(piece, col, 1, false, `${String.fromCharCode(97 + col)}7`)
+      ),
+      ["", "", "", "", "", "", "", ""].map((_, col) =>
+        createSquare("", col, 2, false, `${String.fromCharCode(97 + col)}6`)
+      ),
+      ["", "", "", "", "", "", "", ""].map((_, col) =>
+        createSquare("", col, 3, false, `${String.fromCharCode(97 + col)}5`)
+      ),
+      ["", "", "", "", "", "", "", ""].map((_, col) =>
+        createSquare("", col, 4, false, `${String.fromCharCode(97 + col)}4`)
+      ),
+      ["", "", "", "", "", "", "", ""].map((_, col) =>
+        createSquare("", col, 5, false, `${String.fromCharCode(97 + col)}3`)
+      ),
+      ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"].map((piece, col) =>
+        createSquare(piece, col, 6, false, `${String.fromCharCode(97 + col)}2`)
+      ),
+      ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"].map((piece, col) =>
+        createSquare(piece, col, 7, false, `${String.fromCharCode(97 + col)}1`)
+      )
+    ];
+  }
+
 }

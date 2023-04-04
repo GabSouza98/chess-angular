@@ -22,7 +22,7 @@ div {
   transition: background-color 0.5s ease;
 }
 
-div:hover {
+/* div:hover {
   background-color: aqua !important;
-}
+} */
 
