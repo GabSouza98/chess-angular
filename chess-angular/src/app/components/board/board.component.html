@@ -5,6 +5,7 @@
         [row]="y"
         [col]="x"     
         [color]="getColor(x, y)"
+        [highlighted]="square.highlighted"
         (clickedSquare)="onClickedSquare($event)"
     ></app-square>
 </div>

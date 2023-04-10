@@ -12,6 +12,7 @@ export class SquareComponent {
   @Input() color!: string;
   @Input() row!: number;
   @Input() col!: number;
+  @Input() highlighted!: boolean;
 
   @Output() clickedSquare = new EventEmitter<Coordinates>();
 

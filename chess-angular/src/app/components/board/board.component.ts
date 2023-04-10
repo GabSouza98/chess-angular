@@ -15,6 +15,9 @@ export class BoardComponent implements OnInit {
   darkColor = "grey";
   lightColor = "white";
   availableColor = "lime";
+  lightAllow = "#99ff99";
+  darkAllow = "#33cc33";
+
 
   previousCoordinate?: Coordinates | null;
 
@@ -24,12 +27,13 @@ export class BoardComponent implements OnInit {
     console.log(this.board);
   }
 
-  
-
   getColor(x: number, y: number): string {
     let highlight: boolean = this.board[y][x].highlighted;
 
-    if (highlight) return this.availableColor;
+    if (highlight) {
+      return this.lightAllow;
+      // return (x + y) % 2 === 0 ? this.lightAllow : this.darkAllow;
+    } 
 
     return (x + y) % 2 === 0 ? this.lightColor : this.darkColor;
   }
@@ -46,12 +50,12 @@ export class BoardComponent implements OnInit {
       if (this.isSameTeam(coord)) {
         this.resetSelection();
         this.selectPiece(coord);
+        this.gameEngine.getAllowedSquares(coord.row, coord.col);
         return;
       }
 
       this.makeMove(coord);
       this.resetSelection();
-
       return;
     }
 
@@ -81,7 +85,7 @@ export class BoardComponent implements OnInit {
   selectPiece(coord: Coordinates): void {
     //what if previous coordinate is attribute of gameEngine?
     this.previousCoordinate = coord;
-    this.board[coord.row][coord.col].highlighted = true;    
+    this.board[coord.row][coord.col].highlighted = true;
   }
 
   makeMove(coord: Coordinates): void {

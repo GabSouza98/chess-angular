@@ -7,7 +7,7 @@ export class GameEngine {
 
     constructor(board: Board) {
         this.board = board;
-    }     
+    }
 
     hasPiece(coord: Coordinates): boolean {
         let piece = this.board[coord.row][coord.col].piece;
@@ -22,8 +22,10 @@ export class GameEngine {
         let piece: Piece | null = this.getPiece(pieceName, team, row, col);
 
         if (piece) {
-            let boardResult = piece.getAllowedSquares(this.board);
-            console.log(boardResult);
+            piece.getAllowedSquares(this.board);
+            piece.removeSameTeamSquares(this.board);
+            this.board[row][col].highlighted = true;
+            console.log(this.board);
         }
 
     }
@@ -45,7 +47,6 @@ export class GameEngine {
             default:
                 return null;
         }
-
     }    
 
 }
